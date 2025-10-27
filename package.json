@@ -1,0 +1,52 @@
+{
+  "name": "tonvrodyy1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TON WebApp monorepo for Telegram Mini App with TON Connect, Chakra UI and 3D glass plasma design",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "engines": {
+    "node": "20.11.1",
+    "pnpm": "9.7.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r run dev",
+    "build": "pnpm -r run build",
+    "start": "pnpm --filter backend run start",
+    "install:stack": "node install.js"
+  },
+  "keywords": [
+    "ton",
+    "telegram",
+    "mini-app",
+    "vite",
+    "react",
+    "typescript",
+    "chakra-ui",
+    "three.js",
+    "glassmorphism"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@chakra-ui/react": "2.8.2",
+    "@emotion/react": "11.11.1",
+    "@emotion/styled": "11.11.0",
+    "@react-three/drei": "9.105.0",
+    "@react-three/fiber": "8.13.0",
+    "@ton/core": "0.57.0",
+    "@tonconnect/ui-react": "2.3.1",
+    "framer-motion": "11.0.6",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "three": "0.168.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.45",
+    "tailwindcss": "3.4.5",
+    "typescript": "5.3.3",
+    "vite": "5.0.12"
+  }
+}

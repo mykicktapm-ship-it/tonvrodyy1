@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "name": "tonvrodyy1",
+  "builds": [
+    {
+      "src": "frontend/vite.config.ts",
+      "use": "@vercel/vite"
+    },
+    {
+      "src": "backend/src/app.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/src/app.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/index.html"
+    }
+  ]
+}

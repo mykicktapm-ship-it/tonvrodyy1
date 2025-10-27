@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: tonvrodyy-frontend
+    env: node
+    rootDir: frontend
+    buildCommand: pnpm install --filter frontend && pnpm --filter frontend run build
+    startCommand: npx serve -s dist -l $PORT
+    plan: free
+  - type: web
+    name: tonvrodyy-backend
+    env: node
+    rootDir: backend
+    buildCommand: pnpm install --filter backend && pnpm --filter backend run build
+    startCommand: node dist/app.js
+    plan: free

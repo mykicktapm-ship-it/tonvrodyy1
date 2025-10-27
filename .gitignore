@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+pnpm-lock.yaml
+*.log
+*.cache
+frontend/dist
+backend/dist
