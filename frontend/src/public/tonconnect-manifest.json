@@ -1,7 +1,7 @@
 {
-  "name": "TONVRODYY",
-  "iconUrl": "https://ton.org/img/og_ton_logo.png",
-  "termsOfUseUrl": "https://ton.org/",
-  "privacyPolicyUrl": "https://ton.org/",
-  "url": "https://tonvrodyy.example.com"
+  "name": "TONRODY",
+  "iconUrl": "https://tonvrodyy1-frontend.vercel.app/icon.png",
+  "termsOfUseUrl": "https://tonvrodyy1-frontend.vercel.app/terms",
+  "privacyPolicyUrl": "https://tonvrodyy1-frontend.vercel.app/privacy",
+  "url": "https://tonvrodyy1-frontend.vercel.app"
 }
