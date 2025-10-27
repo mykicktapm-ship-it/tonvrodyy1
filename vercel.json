@@ -20,11 +20,5 @@
       "src": "/(.*)",
       "dest": "frontend/index.html"
     }
-  ],
-  "build": {
-    "env": {
-      "NODE_VERSION": "20.11.1",
-      "PNPM_VERSION": "9.7.0"
-    }
-  }
+  ]
 }

@@ -3,13 +3,21 @@ services:
     name: tonvrodyy-frontend
     env: node
     rootDir: frontend
-    buildCommand: pnpm install --filter frontend && pnpm --filter frontend run build
+    # Install dependencies and build the frontend.  Rely on the lockfile to
+    # select an appropriate pnpm version instead of filtering by workspace.
+    buildCommand: pnpm install && pnpm run build
+    # Serve the compiled frontend using a lightweight HTTP server.
     startCommand: npx serve -s dist -l $PORT
     plan: free
   - type: web
     name: tonvrodyy-backend
     env: node
     rootDir: backend
-    buildCommand: pnpm install --filter backend && pnpm --filter backend run build
-    startCommand: node dist/app.js
+    # Install dependencies and compile the backend.  A plain pnpm install
+    # suffices because the working directory is already set to the backend
+    # folder.
+    buildCommand: pnpm install && pnpm run build
+    # Start the compiled backend.  Use node on the built index file for
+    # compatibility with the build script.
+    startCommand: node dist/index.js
     plan: free
