@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "tonvrodyy12",
+  "name": "tonvrodyy1",
   "builds": [
     {
       "src": "frontend/vite.config.ts",

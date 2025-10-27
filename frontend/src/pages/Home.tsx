@@ -1,36 +1,134 @@
-import React from 'react';
-import { Heading, Text, VStack } from '@chakra-ui/react';
-import { TonConnectButton } from '@tonconnect/ui-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Box,
+  Button,
+  Heading,
+  SimpleGrid,
+  Text,
+  VStack,
+  HStack,
+  useToast,
+} from '@chakra-ui/react';
+import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 import GlassContainer from '../components/GlassContainer';
-import { useUserId } from '../hooks/useUserId';
-import { useReferral } from '../hooks/useReferral';
+import { useAppUserId } from '../hooks/useAppUserId';
+import { useTranslation } from '../LanguageContext';
+
+// Generate random stats or placeholder; in production these would come from API
+function generateStats() {
+  return {
+    totalRounds: Math.floor(Math.random() * 1000),
+    winRate: (Math.random() * 100).toFixed(1) + '%',
+    winnings: (Math.random() * 50).toFixed(2),
+    last24h: (Math.random() * 10).toFixed(2),
+  };
+}
 
 export default function Home() {
-  const userId = useUserId();
-  const referrer = useReferral();
+  const { t } = useTranslation();
+  const userId = useAppUserId();
+  const wallet = useTonWallet();
+  const toast = useToast();
+
+  // Fake stats with update interval
+  const [stats, setStats] = useState(generateStats());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStats(generateStats());
+    }, 12000); // update every 12 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Telegram user info
+  const telegramUser = useMemo(() => {
+    try {
+      return (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+    } catch (e) {
+      return undefined;
+    }
+  }, []);
+
+  const displayName = telegramUser?.first_name ? `${telegramUser.first_name} ${telegramUser.last_name ?? ''}` : 'Guest';
+  const avatarUrl = telegramUser?.photo_url;
 
   return (
-    <VStack spacing={6} align="stretch" pt={16} pb={20} px={4} position="relative">
+    <VStack spacing={6} align="stretch" pt={20} pb={24} px={4} position="relative">
+      {/* Profile card */}
       <GlassContainer>
-        <Heading size="lg" mb={2}>
-          Welcome
-        </Heading>
-        <Text fontSize="md" mb={4}>
-          This Mini App demonstrates integration with TON Connect and Telegram.
+        <HStack spacing={4} align="center" mb={4}>
+          <Box>
+            <img
+              src={avatarUrl ?? '/public/favicon.svg'}
+              alt="avatar"
+              style={{ width: '64px', height: '64px', borderRadius: '50%' }}
+            />
+          </Box>
+          <Box>
+            <Heading size="md">{displayName}</Heading>
+            {userId && (
+              <Text fontSize="xs" color="ton.secondaryText">
+                {userId}
+              </Text>
+            )}
+          </Box>
+        </HStack>
+        <Text fontSize="sm" mb={2}>
+          {t('general.home')} {t('general.notConnected')}
         </Text>
-        {userId && (
-          <Text fontSize="sm">
-            Your User&nbsp;ID:&nbsp;
-            <b>{userId}</b>
-          </Text>
-        )}
-        {referrer && (
-          <Text fontSize="sm" color="gray.400">
-            Referred by: {referrer}
-          </Text>
-        )}
-        <Text mt={4}>Connect your TON wallet below:</Text>
-        <TonConnectButton />
+        {/* Wallet status */}
+        <Box mb={4}>
+          {wallet?.account?.address ? (
+            <Text fontSize="sm" color="ton.glow">
+              {wallet.account.address.slice(0, 6)}…{wallet.account.address.slice(-4)}
+            </Text>
+          ) : (
+            <TonConnectButton />
+          )}
+        </Box>
+        {/* Action buttons */}
+        <HStack spacing={4} mb={4} wrap="wrap">
+          <Button colorScheme="blue" size="sm" onClick={() => toast({ title: 'Deposit clicked', duration: 1500, isClosable: true })}>
+            {t('general.deposit')}
+          </Button>
+          <Button colorScheme="blue" size="sm" onClick={() => toast({ title: 'Withdraw clicked', duration: 1500, isClosable: true })}>
+            {t('general.withdraw')}
+          </Button>
+          <Button colorScheme="blue" size="sm" onClick={() => toast({ title: 'History clicked', duration: 1500, isClosable: true })}>
+            {t('general.history')}
+          </Button>
+        </HStack>
+      </GlassContainer>
+      {/* Stats */}
+      <GlassContainer>
+        <Heading size="md" mb={4}>
+          {t('home.stats')}
+        </Heading>
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <Box>
+            <Text fontSize="xs" color="ton.secondaryText" mb={1}>
+              {t('home.totalRounds')}
+            </Text>
+            <Heading size="lg">{stats.totalRounds}</Heading>
+          </Box>
+          <Box>
+            <Text fontSize="xs" color="ton.secondaryText" mb={1}>
+              {t('home.winRate')}
+            </Text>
+            <Heading size="lg">{stats.winRate}</Heading>
+          </Box>
+          <Box>
+            <Text fontSize="xs" color="ton.secondaryText" mb={1}>
+              {t('home.winnings')} (TON)
+            </Text>
+            <Heading size="lg">{stats.winnings}</Heading>
+          </Box>
+          <Box>
+            <Text fontSize="xs" color="ton.secondaryText" mb={1}>
+              {t('home.last24h')}
+            </Text>
+            <Heading size="lg">{stats.last24h}</Heading>
+          </Box>
+        </SimpleGrid>
       </GlassContainer>
     </VStack>
   );

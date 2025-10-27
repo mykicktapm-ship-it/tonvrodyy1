@@ -8,13 +8,16 @@ import React from 'react';
 export default function GlassContainer(props: BoxProps) {
   return (
     <Box
-      bg="rgba(255,255,255,0.05)"
+      bg="ton.surface"
       borderWidth="1px"
       borderColor="rgba(255,255,255,0.18)"
       borderRadius="xl"
       boxShadow="lg"
       p={6}
-      backdropFilter="blur(12px)"
+      backdropFilter="blur(24px)"
+      position="relative"
+      _hover={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.3)' }}
+      transition="all 0.2s ease"
       {...props}
     />
   );
