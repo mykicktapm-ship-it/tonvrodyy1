@@ -14,8 +14,7 @@
   "scripts": {
     "dev": "pnpm -r run dev",
     "build": "pnpm -r run build",
-    "start": "pnpm --filter backend run start",
-    "install:stack": "node install.js"
+    "start": "pnpm --filter backend run start"
   },
   "keywords": [
     "ton",
