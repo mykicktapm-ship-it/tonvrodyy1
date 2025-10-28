@@ -5,6 +5,7 @@ import { LanguageProvider } from './LanguageContext';
 import Home from './pages/Home';
 import Laboratory from './pages/Laboratory';
 import Earn from './pages/Earn';
+import LobbyView from './pages/LobbyView';
 import NavBar from './components/NavBar';
 import AppBar from './components/AppBar';
 
@@ -33,6 +34,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/laboratory" element={<Laboratory />} />
+          <Route path="/lobby/:id" element={<LobbyView />} />
           <Route path="/earn" element={<Earn />} />
         </Routes>
         <NavBar />
