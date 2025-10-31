@@ -21,6 +21,7 @@ import GlassContainer from '../components/GlassContainer';
 import { useAppUserId } from '../hooks/useAppUserId';
 import { useTranslation } from '../LanguageContext';
 import { FaCopy, FaShareAlt } from 'react-icons/fa';
+import CosmicBackground from '../components/CosmicBackground';
 
 export default function Earn() {
   const { t } = useTranslation();
@@ -83,6 +84,8 @@ export default function Earn() {
 
   return (
     <VStack spacing={6} align="stretch" pt={20} pb={24} px={4} position="relative">
+      {/* Cosmic background behind referral info */}
+      <CosmicBackground />
       <GlassContainer>
         <HStack spacing={4} align="center" mb={4}>
           <Box>

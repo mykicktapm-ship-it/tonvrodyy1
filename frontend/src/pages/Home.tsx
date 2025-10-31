@@ -13,6 +13,7 @@ import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 import GlassContainer from '../components/GlassContainer';
 import { useAppUserId } from '../hooks/useAppUserId';
 import { useTranslation } from '../LanguageContext';
+import CosmicBackground from '../components/CosmicBackground';
 
 // Generate random stats or placeholder; in production these would come from API
 function generateStats() {
@@ -53,6 +54,8 @@ export default function Home() {
 
   return (
     <VStack spacing={6} align="stretch" pt={20} pb={24} px={4} position="relative">
+      {/* Cosmic background behind profile and stats */}
+      <CosmicBackground />
       {/* Profile card */}
       <GlassContainer>
         <HStack spacing={4} align="center" mb={4}>

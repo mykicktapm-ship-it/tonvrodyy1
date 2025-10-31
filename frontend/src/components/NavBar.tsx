@@ -31,9 +31,7 @@ export default function NavBar() {
       zIndex={20}
     >
       {items.map((item) => {
-        // Treat /lobby/:id as active Laboratory tab
-        const isLabPath = location.pathname.startsWith('/laboratory') || location.pathname.startsWith('/lobby');
-        const isActive = item.to === '/laboratory' ? isLabPath : location.pathname === item.to;
+        const isActive = location.pathname === item.to;
         return (
           <NavLink key={item.to} to={item.to} end>
             <Flex

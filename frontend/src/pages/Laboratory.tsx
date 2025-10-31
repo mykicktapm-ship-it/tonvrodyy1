@@ -1,73 +1,182 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Button,
   Flex,
   Heading,
   HStack,
+  IconButton,
   Input,
   SimpleGrid,
   Tab,
   TabList,
+  TabPanel,
+  TabPanels,
   Tabs,
   Text,
   VStack,
   useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Select,
   useToast,
 } from '@chakra-ui/react';
-import PlasmaScene from '../components/PlasmaScene';
+import CosmicBackground from '../components/CosmicBackground';
+import DigitalPlanet from '../components/DigitalPlanet';
+import { motion } from 'framer-motion';
+import { useEnhancedFx } from '../context/EnhancedFxContext';
 import GlassContainer from '../components/GlassContainer';
 import { useTranslation } from '../LanguageContext';
-import { useAppUserId } from '../hooks/useAppUserId';
-import { useLobbies } from '../store/lobbies';
-import { useNavigate } from 'react-router-dom';
-import CreateLobbyModal from '../components/CreateLobbyModal';
 
+interface Lobby {
+  id: string;
+  tier: 'Easy' | 'Medium' | 'Hot';
+  participants: number;
+  seats: number;
+  stake: number;
+  pool: number;
+  created: string;
+  progress: number;
+}
 
 export default function Laboratory() {
   const { t } = useTranslation();
+  const { isEnhanced } = useEnhancedFx();
+  // Trigger for wave distortion around the planet when interacted
+  const [waveTrigger, setWaveTrigger] = useState(false);
+  const handlePlanetInteract = () => {
+    if (!isEnhanced) return;
+    setWaveTrigger(true);
+    // Reset after animation completes
+    setTimeout(() => setWaveTrigger(false), 800);
+  };
+  // Inline wave effect component
+  const WaveEffect = () => (
+    <motion.div
+      initial={{ opacity: 0.4, scale: 0 }}
+      animate={{ opacity: 0, scale: 2 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(0,152,234,0.5) 0%, rgba(0,152,234,0) 70%)',
+      }}
+    />
+  );
   const toast = useToast();
-  const navigate = useNavigate();
-  const userId = useAppUserId();
-  const { items: lobbies, fetchAll, join, create: createLobby } = useLobbies();
+  // Sample lobbies
+  const lobbyData: Lobby[] = useMemo(
+    () => [
+      {
+        id: 'E1',
+        tier: 'Easy',
+        participants: 3,
+        seats: 10,
+        stake: 0.5,
+        pool: 5,
+        created: '2m ago',
+        progress: 0.3,
+      },
+      {
+        id: 'M1',
+        tier: 'Medium',
+        participants: 10,
+        seats: 20,
+        stake: 1,
+        pool: 20,
+        created: '5m ago',
+        progress: 0.5,
+      },
+      {
+        id: 'H1',
+        tier: 'Hot',
+        participants: 25,
+        seats: 30,
+        stake: 2.5,
+        pool: 75,
+        created: '10m ago',
+        progress: 0.8,
+      },
+      {
+        id: 'E2',
+        tier: 'Easy',
+        participants: 7,
+        seats: 10,
+        stake: 0.5,
+        pool: 5,
+        created: '8m ago',
+        progress: 0.6,
+      },
+    ],
+    []
+  );
   // Tab state: 0=All,1=Easy,2=Medium,3=Hot
   const [tabIndex, setTabIndex] = useState(0);
   const [search, setSearch] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  // Fetch lobbies on mount
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+  // Form state for create lobby
+  const [newTier, setNewTier] = useState<'Easy' | 'Medium' | 'Hot'>('Easy');
+  const [newSeats, setNewSeats] = useState(10);
+  const [newStake, setNewStake] = useState(0.5);
+  const [isPrivate, setIsPrivate] = useState(false);
 
   // Filter lobbies by tab and search
   const filtered = useMemo(() => {
-    return lobbies.filter((l) => {
+    return lobbyData.filter((l) => {
       const matchTab =
         tabIndex === 0 || (tabIndex === 1 && l.tier === 'Easy') || (tabIndex === 2 && l.tier === 'Medium') || (tabIndex === 3 && l.tier === 'Hot');
       const matchSearch = l.id.toLowerCase().includes(search.toLowerCase());
       return matchTab && matchSearch;
     });
-  }, [lobbies, tabIndex, search]);
+  }, [lobbyData, tabIndex, search]);
 
-  // Join lobby handler
-  const handleJoinLobby = async (id: string) => {
-    if (!userId) {
-      toast({ title: 'Неизвестный пользователь', status: 'error', duration: 2000, isClosable: true });
-      return;
-    }
-    await join(id, { id: userId, nickname: 'Guest', joinedAt: new Date().toISOString() });
-    toast({ title: 'Вы присоединились', status: 'success', duration: 1500, isClosable: true });
-  };
-
-  // View lobby handler
-  const handleViewLobby = (id: string) => {
-    navigate(`/lobby/${id}`);
+  const handleCreateLobby = () => {
+    toast({ title: 'Lobby created (stub)', description: `Tier ${newTier}`, duration: 1500, isClosable: true });
+    onClose();
   };
 
   return (
     <VStack spacing={6} align="stretch" pt={20} pb={24} px={4} position="relative">
-      <PlasmaScene />
+      {/* Cosmic background with star layers */}
+      <CosmicBackground />
+      {/* Digital planet container */}
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        w="100%"
+        h={{ base: '260px', md: '320px' }}
+        mb={4}
+        position="relative"
+      >
+        <Box
+          w={{ base: '260px', md: '320px' }}
+          h={{ base: '260px', md: '320px' }}
+          borderRadius="full"
+          overflow="hidden"
+          bg="rgba(0,0,0,0.2)"
+          boxShadow="0 0 40px rgba(0,150,255,0.3)"
+          position="relative"
+          onClick={handlePlanetInteract}
+        >
+          <DigitalPlanet />
+          {/* Wave distortion overlay */}
+          {isEnhanced && waveTrigger && <WaveEffect />}
+        </Box>
+      </Box>
       {/* Metrics */}
       <GlassContainer>
         <HStack spacing={8} flexWrap="wrap">
@@ -121,31 +230,26 @@ export default function Laboratory() {
                 </Text>
               </Flex>
               <Text fontSize="xs" color="ton.secondaryText">
-                {lobby.participants.length}/{lobby.seats} participants
+                {lobby.participants}/{lobby.seats} participants
               </Text>
               <Text fontSize="xs" color="ton.secondaryText">
-                Stake: {lobby.stakeTon} TON
+                Stake: {lobby.stake} TON
               </Text>
               <Text fontSize="xs" color="ton.secondaryText">
-                Pool: {(lobby.seats * lobby.stakeTon).toFixed(2)} TON
+                Pool: {lobby.pool} TON
               </Text>
               <Text fontSize="xs" color="ton.secondaryText">
-                Created: {new Date(lobby.createdAt).toLocaleString()}
+                Created: {lobby.created}
               </Text>
               {/* progress bar */}
               <Box w="100%" h="4px" bg="rgba(255,255,255,0.1)" mt={2} mb={2} borderRadius="sm">
-                <Box w={`${(lobby.participants.length / lobby.seats) * 100}%`} h="100%" bg="ton.accent" borderRadius="sm" />
+                <Box w={`${lobby.progress * 100}%`} h="100%" bg="ton.accent" borderRadius="sm" />
               </Box>
               <HStack justify="space-between">
-                <Button
-                  size="xs"
-                  colorScheme="blue"
-                  onClick={() => handleJoinLobby(lobby.id)}
-                  isDisabled={lobby.status !== 'OPEN' || lobby.participants.length >= lobby.seats}
-                >
+                <Button size="xs" colorScheme="blue" onClick={() => toast({ title: `Join ${lobby.id}`, duration: 1000, isClosable: true })}>
                   {t('general.join')}
                 </Button>
-                <Button size="xs" variant="ghost" onClick={() => handleViewLobby(lobby.id)}>
+                <Button size="xs" variant="ghost" onClick={() => toast({ title: `View ${lobby.id}`, duration: 1000, isClosable: true })}>
                   {t('general.view')}
                 </Button>
               </HStack>
@@ -159,8 +263,43 @@ export default function Laboratory() {
           {t('general.createLobby')}
         </Button>
       </Box>
-      {/* Create lobby modal component */}
-      <CreateLobbyModal isOpen={isOpen} onClose={onClose} />
+      {/* Create lobby modal */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay backdropFilter="blur(6px)" />
+        <ModalContent bg="ton.surface" border="1px solid rgba(255,255,255,0.18)">
+          <ModalHeader>{t('general.createLobby')}</ModalHeader>
+          <ModalBody>
+            <Select mb={3} value={newTier} onChange={(e) => setNewTier(e.target.value as any)}>
+              <option value="Easy">{t('general.easy')}</option>
+              <option value="Medium">{t('general.medium')}</option>
+              <option value="Hot">{t('general.hot')}</option>
+            </Select>
+            <NumberInput mb={3} value={newSeats} min={2} max={30} onChange={(val) => setNewSeats(Number(val))}>
+              <NumberInputField placeholder="Seats" />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+            <NumberInput mb={3} value={newStake} min={0.1} step={0.1} onChange={(val) => setNewStake(Number(val))}>
+              <NumberInputField placeholder="Stake (TON)" />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+            {/* Private toggle removed for brevity */}
+          </ModalBody>
+          <ModalFooter>
+            <Button mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={handleCreateLobby}>
+              Create
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </VStack>
   );
 }

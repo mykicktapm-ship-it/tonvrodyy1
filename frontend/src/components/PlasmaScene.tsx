@@ -1,34 +1,9 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Sphere, OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls, Stars } from '@react-three/drei';
 import { Mesh } from 'three';
 
-/**
- * Animated sphere that slowly morphs and rotates to create a plasma-like feel.
- */
-function AnimatedSphere() {
-  const ref = useRef<Mesh>(null!);
-  // Use frame loop to animate the sphere
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    if (ref.current) {
-      ref.current.rotation.x = t * 0.2;
-      ref.current.rotation.y = t * 0.3;
-      const scale = 1 + Math.sin(t * 2) * 0.1;
-      ref.current.scale.set(scale, scale, scale);
-    }
-  });
-  return (
-    <Sphere ref={ref} args={[1.2, 64, 64]}>
-      <meshStandardMaterial
-        color="#00aaff"
-        emissive="#0066cc"
-        roughness={0.2}
-        metalness={0.1}
-      />
-    </Sphere>
-  );
-}
+// Removed AnimatedSphere; PlasmaScene now only renders a rotating star field
 
 /**
  * PlasmaScene renders a full-screen 3D canvas with an animated sphere and some stars.
@@ -40,8 +15,8 @@ export default function PlasmaScene() {
       <Canvas camera={{ position: [0, 0, 4] }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
-        <AnimatedSphere />
-        <Stars radius={20} depth={50} count={3000} factor={4} fade />
+        {/* Render a simple star field without a central sphere */}
+        <Stars radius={40} depth={60} count={2000} factor={4} fade />
         <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
       </Canvas>
     </div>

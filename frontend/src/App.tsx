@@ -5,7 +5,7 @@ import { LanguageProvider } from './LanguageContext';
 import Home from './pages/Home';
 import Laboratory from './pages/Laboratory';
 import Earn from './pages/Earn';
-import LobbyView from './pages/LobbyView';
+import { EnhancedFxProvider } from './context/EnhancedFxContext';
 import NavBar from './components/NavBar';
 import AppBar from './components/AppBar';
 
@@ -30,14 +30,16 @@ export default function App() {
   return (
     <LanguageProvider>
       <TonConnectUIProvider manifestUrl={manifestUrl}>
-        <AppBar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/laboratory" element={<Laboratory />} />
-          <Route path="/lobby/:id" element={<LobbyView />} />
-          <Route path="/earn" element={<Earn />} />
-        </Routes>
-        <NavBar />
+        {/* EnhancedFxProvider provides a toggleable state for heavy visual effects */}
+        <EnhancedFxProvider>
+          <AppBar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/laboratory" element={<Laboratory />} />
+            <Route path="/earn" element={<Earn />} />
+          </Routes>
+          <NavBar />
+        </EnhancedFxProvider>
       </TonConnectUIProvider>
     </LanguageProvider>
   );

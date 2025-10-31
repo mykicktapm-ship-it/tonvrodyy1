@@ -11,11 +11,14 @@ import {
   MenuItem,
   MenuList,
   Button,
+  HStack,
+  Switch,
 } from '@chakra-ui/react';
 import { useTranslation } from '../LanguageContext';
 import { useAppUserId } from '../hooks/useAppUserId';
 import { useTonWallet } from '@tonconnect/ui-react';
 import { FaLanguage } from 'react-icons/fa';
+import { useEnhancedFx } from '../context/EnhancedFxContext';
 
 /**
  * Top application bar. Displays logo, language switcher, wallet status and avatar.
@@ -24,6 +27,9 @@ export default function AppBar() {
   const { locale, setLocale, t } = useTranslation();
   const userId = useAppUserId();
   const wallet = useTonWallet();
+
+  // Enhanced FX toggle
+  const { isEnhanced, toggleEnhanced } = useEnhancedFx();
 
   // Determine user avatar from Telegram init data
   const avatarUrl = React.useMemo(() => {
@@ -89,6 +95,13 @@ export default function AppBar() {
       </Box>
       {/* Avatar */}
       <Avatar size="sm" src={avatarUrl} name={userId ?? undefined} />
+      {/* Enhanced FX toggle (optional heavy effects) */}
+      <HStack ml={4} spacing={2} align="center">
+        <Text fontSize="sm" color="ton.secondaryText" display={{ base: 'none', md: 'inline' }}>
+          ✨ FX
+        </Text>
+        <Switch size="sm" colorScheme="blue" isChecked={isEnhanced} onChange={toggleEnhanced} />
+      </HStack>
     </Flex>
   );
 }

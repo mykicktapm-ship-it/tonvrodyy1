@@ -1,39 +1,68 @@
-// Definitions for lobby entities and statuses used in the Laboratory feature.
+// Type definitions for lobbies and participants used throughout the
+// frontend. Having a central file for these interfaces helps avoid
+// circular imports and makes it easier to evolve the shape of lobby
+// objects as the application grows.
 
+/**
+ * The tier of a lobby determines both the number of seats and the
+ * stake per seat. These values are defined in the lobby creation
+ * logic and used to calculate the total pool.
+ */
 export type Tier = 'Easy' | 'Medium' | 'Hot';
 
-// Possible lifecycle statuses of a lobby.
-export type LobbyStatus =
-  | 'OPEN'      // lobby is accepting participants
-  | 'FULL'      // all seats filled, countdown to start
-  | 'RUNNING'   // a winner is being determined
-  | 'FINISHED'  // the round has concluded and a winner is known
-  | 'CLOSED';   // lobby is no longer available
+/**
+ * A lobby can be in one of several states which drive the UI and
+ * behaviour of the countdown and round resolution. When players
+ * join, the lobby transitions from OPEN to FULL once the seats are
+ * filled. A countdown then runs before marking the lobby as RUNNING
+ * and eventually FINISHED with a winner. A CLOSED lobby is removed
+ * from lists and cannot be joined.
+ */
+export type LobbyStatus = 'OPEN' | 'FULL' | 'RUNNING' | 'FINISHED' | 'CLOSED';
 
-// A participant in a lobby. Fields may be extended in future when
-// integrating with Supabase or other backend services.
+/**
+ * Represents a single participant in a lobby. Avatars and wallet
+ * addresses are optional because they may not be available at the
+ * time of joining. The joinedAt timestamp is added on join.
+ */
 export interface Participant {
-  id: string;           // app-specific user id (sha256 of telegram id + salt)
-  nickname: string;     // user-provided name or fallback
-  avatarUrl?: string;   // optional avatar URL from Telegram
-  wallet?: string;      // TON wallet address if connected
-  joinedAt: string;     // ISO timestamp when the participant joined
+  id: string;
+  nickname: string;
+  avatarUrl?: string;
+  wallet?: string;
+  joinedAt: string;
 }
 
-// Representation of a lobby. Additional metadata (e.g. private flag) can
-// be added later. Calculated fields like `poolTon` are derived from
-// existing properties.
+/**
+ * The core lobby type. Each lobby has a unique ID, a tier, a number
+ * of seats and stake per seat, a status and the creator. The
+ * participants array grows as users join. Optional fields such as
+ * winnerId, countdownSec and poolTon are added or updated as the
+ * lobby progresses through its lifecycle.
+ */
 export interface Lobby {
   id: string;
   tier: Tier;
-  seats: number;
   stakeTon: number;
+  seats: number;
   status: LobbyStatus;
   createdAt: string;
   creatorId: string;
   participants: Participant[];
-  // optional fields used during lobby lifecycle
-  poolTon?: number;
-  countdownSec?: number;
+  /**
+   * ID of the participant who won the round. Only populated when
+   * status transitions to FINISHED.
+   */
   winnerId?: string;
+  /**
+   * Countdown in seconds when a lobby becomes full. When the
+   * countdown reaches zero the lobby enters RUNNING.
+   */
+  countdownSec?: number;
+  /**
+   * The total pool of TON locked in the lobby. It is calculated
+   * as seats * stakeTon when the lobby is created and does not
+   * change afterwards in the mock implementation.
+   */
+  poolTon?: number;
 }
