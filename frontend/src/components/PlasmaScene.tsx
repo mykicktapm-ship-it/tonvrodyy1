@@ -1,24 +1,53 @@
 import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
-import { Mesh } from 'three';
+import * as THREE from 'three';
+import { shaderMaterial } from '@react-three/drei';
+import { extend, useFrame } from '@react-three/fiber';
 
-// Removed AnimatedSphere; PlasmaScene now only renders a rotating star field
+const PlasmaMat = shaderMaterial(
+  { uTime: 0, uColor1: new THREE.Color('#7c3aed'), uColor2: new THREE.Color('#06b6d4') },
+  // vertex
+  `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+  `,
+  // fragment
+  `
+  uniform float uTime;
+  uniform vec3 uColor1;
+  uniform vec3 uColor2;
+  varying vec2 vUv;
 
-/**
- * PlasmaScene renders a full-screen 3D canvas with an animated sphere and some stars.
- * It is placed behind the UI elements to give a sense of depth.
- */
-export default function PlasmaScene() {
+  float noise(vec2 p){
+    return sin(p.x*10.0 + uTime*0.5) * sin(p.y*10.0 - uTime*0.3);
+  }
+
+  void main(){
+    float n = noise(vUv * 1.6);
+    vec3 col = mix(uColor1, uColor2, smoothstep(-0.5, 0.5, n));
+    float alpha = 0.35 + 0.2 * sin(uTime + vUv.x * 3.14);
+    gl_FragColor = vec4(col, alpha);
+  }
+  `
+);
+
+extend({ PlasmaMat });
+
+export const PlasmaScene: React.FC = () => {
+  const matRef = useRef<any>(null);
+  useFrame(({ clock }) => {
+    if (matRef.current) matRef.current.uTime = clock.getElapsedTime();
+  });
+
   return (
-    <div className="plasma-background">
-      <Canvas camera={{ position: [0, 0, 4] }}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
-        {/* Render a simple star field without a central sphere */}
-        <Stars radius={40} depth={60} count={2000} factor={4} fade />
-        <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
-      </Canvas>
-    </div>
+    <mesh position={[0, 0, -20]}>
+      <planeGeometry args={[300, 180, 1, 1]} />
+      {/* @ts-ignore */}
+      <plasmaMat ref={matRef} />
+    </mesh>
   );
-}
+};
+
+export default PlasmaScene;

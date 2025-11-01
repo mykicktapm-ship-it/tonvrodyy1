@@ -1,64 +1,39 @@
-import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import React, { useRef } from 'react';
+import { Mesh } from 'three';
+import { useFrame, useThree } from '@react-three/fiber';
+import { MeshWobbleMaterial, Html } from '@react-three/drei';
 
-// Fragment shader for the digital planet. Creates a dynamic grid-like
-// pattern that scrolls over the sphere surface and blends between
-// dark and bright blues.
-const fragmentShader = `
-uniform float time;
-varying vec2 vUv;
-void main() {
-  vec2 uv = vUv;
-  // Slowly scroll the texture vertically over time
-  uv.y += time * 0.2;
-  // Create a grid pattern using sine waves; step() sharpens the edges
-  float grid = step(0.95, abs(sin(uv.y * 60.0))) * step(0.95, abs(sin(uv.x * 60.0)));
-  vec3 color = mix(vec3(0.0, 0.2, 0.4), vec3(0.0, 0.8, 1.0), grid);
-  gl_FragColor = vec4(color, 1.0);
-}`;
+type Props = {
+  scale?: number;
+  autoRotate?: boolean;
+};
 
-// Simple passthrough vertex shader that forwards UV coordinates to
-// the fragment shader. Using a custom shader here allows us to drive
-// animations via uniforms in the fragment stage.
-const vertexShader = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}`;
+export const DigitalPlanet: React.FC<Props> = ({ scale = 8, autoRotate = true }) => {
+  const meshRef = useRef<Mesh | null>(null);
+  const { viewport } = useThree();
 
-/**
- * Planet renders a sphere with a custom shader material. It rotates
- * slowly around the Y axis and updates a time uniform each frame to
- * animate the shader.
- */
-function Planet() {
-  const mesh = useRef<THREE.Mesh>(null!);
-  const uniforms = useRef({ time: { value: 0.0 } });
-  useFrame((_, delta) => {
-    uniforms.current.time.value += delta;
-    if (mesh.current) mesh.current.rotation.y += delta * 0.2;
+  useFrame(({ clock }) => {
+    if (!meshRef.current) return;
+    if (autoRotate) meshRef.current.rotation.y += 0.0025;
+    meshRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.1) * 0.08;
   });
-  return (
-    <mesh ref={mesh}>
-      <sphereGeometry args={[1, 64, 64]} />
-      <shaderMaterial fragmentShader={fragmentShader} vertexShader={vertexShader} uniforms={uniforms.current} />
-    </mesh>
-  );
-}
 
-/**
- * DigitalPlanet composes the animated planet within a Canvas. Lights
- * illuminate the sphere to give it depth, and the camera is set
- * slightly back to frame the object nicely.
- */
-export default function DigitalPlanet() {
+  // responsive scaling: smaller on narrow screens
+  const adjustedScale = viewport.width < 6 ? scale * 0.6 : viewport.width > 20 ? scale * 1.1 : scale;
+
   return (
-    <Canvas camera={{ position: [0, 0, 3] }}>
-      <ambientLight intensity={0.4} />
-      <pointLight position={[2, 2, 2]} intensity={1.5} color="#00baff" />
-      <Planet />
-    </Canvas>
+    <group>
+      <mesh ref={meshRef} scale={adjustedScale}>
+        <icosahedronGeometry args={[1, 5]} />
+        <MeshWobbleMaterial factor={0.6} speed={0.6} color="#6ee7b7" emissive="#0e7490" />
+      </mesh>
+
+      {/* subtle label */}
+      <Html position={[0, -1.8, 0]}>
+        <div style={{ pointerEvents: 'none', color: 'rgba(255,255,255,0.8)', fontSize: 12, textAlign: 'center' }}>TONRODY</div>
+      </Html>
+    </group>
   );
-}
+};
+
+export default DigitalPlanet;

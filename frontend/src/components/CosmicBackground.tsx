@@ -1,66 +1,61 @@
 import React, { useRef } from 'react';
-import { Box, useBreakpointValue } from '@chakra-ui/react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
-// Import the full THREE namespace instead of only Group. This allows
-// referencing Three.js classes via THREE.Group and avoids issues with
-// named exports that may not exist in some builds of three.
 import * as THREE from 'three';
-import { useEnhancedFx } from '../context/EnhancedFxContext';
+import { useFrame } from '@react-three/fiber';
 
-/**
- * StarLayers renders multiple rotating star fields at different radii to
- * simulate depth and parallax. The multiplier adjusts the number of stars
- * based on screen size and whether enhanced FX are enabled.
- */
-function StarLayers({ multiplier = 1 }: { multiplier?: number }) {
-  // Each star layer is represented by a Three.js Group. Using the
-  // explicit THREE.Group type here ensures TypeScript resolves the
-  // generic correctly when using the THREE namespace import.
-  const layer1 = useRef<THREE.Group>(null!);
-  const layer2 = useRef<THREE.Group>(null!);
-  const layer3 = useRef<THREE.Group>(null!);
-  // Slowly rotate layers in opposite directions to create drift.
+type Props = {
+  speed?: number;
+};
+
+export const CosmicBackground: React.FC<Props> = ({ speed = 0.02 }) => {
+  const starsRef = useRef<THREE.Points>(null);
+  const meteorRef = useRef<THREE.Mesh>(null);
+
+  // create star positions once
+  const starPositions = React.useMemo(() => {
+    const arr = new Float32Array(1000 * 3);
+    for (let i = 0; i < 1000; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 200;
+      arr[i * 3 + 1] = (Math.random() - 0.5) * 200;
+      arr[i * 3 + 2] = -Math.random() * 200;
+    }
+    return arr;
+  }, []);
+
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    if (layer1.current) layer1.current.rotation.z = t * 0.02;
-    if (layer2.current) layer2.current.rotation.z = -t * 0.015;
-    if (layer3.current) layer3.current.rotation.z = t * 0.01;
+    if (starsRef.current) {
+      starsRef.current.rotation.y = t * speed * 0.02;
+    }
+    if (meteorRef.current) {
+      meteorRef.current.position.x = Math.sin(t * 0.6) * 80;
+      meteorRef.current.position.y = -50 + Math.cos(t * 0.6) * 30;
+      meteorRef.current.rotation.z += 0.06;
+    }
   });
-  const count1 = Math.floor(500 * multiplier);
-  const count2 = Math.floor(1000 * multiplier);
-  const count3 = Math.floor(1500 * multiplier);
-  return (
-    <>
-      <group ref={layer1}>
-        <Stars radius={50} depth={20} count={count1} factor={4} fade />
-      </group>
-      <group ref={layer2}>
-        <Stars radius={100} depth={40} count={count2} factor={2} fade />
-      </group>
-      <group ref={layer3}>
-        <Stars radius={200} depth={80} count={count3} factor={1} fade />
-      </group>
-    </>
-  );
-}
 
-/**
- * CosmicBackground draws animated starfields across the entire page. It reads
- * the enhanced FX flag from context to adjust density and heavy effects.
- */
-export default function CosmicBackground() {
-  const { isEnhanced } = useEnhancedFx();
-  // Adjust star density based on viewport size to improve performance on smaller devices.
-  const density = useBreakpointValue({ base: 0.4, md: 0.7, lg: 1 });
-  const multiplier = (density ?? 1) * (isEnhanced ? 1 : 0.5);
   return (
-    <Box position="absolute" top="0" left="0" w="100%" h="100%" zIndex={0} overflow="hidden" pointerEvents="none">
-      <Canvas camera={{ position: [0, 0, 1] }}>
-        <ambientLight intensity={0.3} />
-        <StarLayers multiplier={multiplier} />
-        {/* Meteor streaks and other heavy effects could be added here when isEnhanced is true. */}
-      </Canvas>
-    </Box>
+    <group>
+      {/* distant stars layer */}
+      <points ref={starsRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={starPositions.length / 3} array={starPositions} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial size={0.8} color="#b9f" sizeAttenuation />
+      </points>
+
+      {/* subtle wave layer - a semi-transparent plane with animated normals */}
+      <mesh position={[0, -30, -40]} rotation={[-0.4, 0, 0]}>
+        <planeGeometry args={[400, 200, 32, 32]} />
+        <meshStandardMaterial color="#0f172a" transparent opacity={0.12} roughness={1} />
+      </mesh>
+
+      {/* moving meteor (rare) */}
+      <mesh ref={meteorRef} position={[0, -50, -60]}>
+        <sphereGeometry args={[1.6, 8, 8]} />
+        <meshStandardMaterial emissive="#ff9" color="#ffd" />
+      </mesh>
+    </group>
   );
-}
+};
+
+export default CosmicBackground;

@@ -1,94 +1,113 @@
-import { create } from 'zustand';
-import { Lobby, Participant, Tier } from '../types/lobby';
-import { listLobbies, getLobby, createLobby as apiCreateLobby, joinLobby as apiJoinLobby, leaveLobby as apiLeaveLobby, tickCountdown, removeLobby } from '../api/lobbies';
+import create from 'zustand';
+import { nanoid } from 'nanoid';
+import { Lobby, Participant, LobbyStatus, Tier } from '../types/lobby';
 
-/**
- * Zustand store for managing lobby state across the application.
- * Contains actions to fetch lobbies, create new ones, join/leave, and
- * handle countdown progression. In a real app these actions would
- * include network requests; here they work on a local in-memory
- * collection maintained by the api module.
- */
+type LobbiesState = {
+  lobbies: Lobby[];
+  createLobby: (opts: {
+    tier: Tier;
+    stakeTon: number;
+    seats: number;
+    creatorId: string;
+  }) => Lobby;
+  joinLobby: (lobbyId: string, p: Omit<Participant, 'joinedAt'>) => Lobby | undefined;
+  leaveLobby: (lobbyId: string, participantId: string) => void;
+  startLobbyCountdown: (lobbyId: string, seconds: number) => void;
+  pickWinner: (lobbyId: string) => void;
+  closeLobby: (lobbyId: string) => void;
+  reset: () => void;
+};
 
-interface LobbiesState {
-  items: Lobby[];
-  current?: Lobby;
-  loading: boolean;
-  // Fetch all lobbies from the API/stub
-  fetchAll: () => Promise<void>;
-  // Fetch a specific lobby
-  fetchOne: (id: string) => Promise<void>;
-  // Create a new lobby
-  create: (params: { tier: Tier; seats: number; stakeTon: number; creatorId: string; isPrivate?: boolean }) => Promise<void>;
-  // Join an existing lobby
-  join: (id: string, participant: Participant) => Promise<void>;
-  // Leave a lobby
-  leave: (id: string, userId: string) => Promise<void>;
-  // Advance countdown — should be called periodically by UI timer
-  tick: (id: string) => Promise<void>;
-  // Remove lobby from store when closed
-  remove: (id: string) => Promise<void>;
-}
+const DEFAULT_LOBBIES: Lobby[] = [];
 
-export const useLobbies = create<LobbiesState>((set, get) => ({
-  items: [],
-  current: undefined,
-  loading: false,
-  async fetchAll() {
-    set({ loading: true });
-    const data = await listLobbies();
-    set({ items: data, loading: false });
+export const useLobbiesStore = create<LobbiesState>((set, get) => ({
+  lobbies: DEFAULT_LOBBIES,
+  createLobby: ({ tier, stakeTon, seats, creatorId }) => {
+    const newLobby: Lobby = {
+      id: nanoid(),
+      tier,
+      stakeTon,
+      seats,
+      status: 'OPEN',
+      createdAt: new Date().toISOString(),
+      creatorId,
+      participants: [],
+    };
+    set((s) => ({ lobbies: [newLobby, ...s.lobbies] }));
+    return newLobby;
   },
-  async fetchOne(id) {
-    set({ loading: true });
-    const lobby = await getLobby(id);
-    set({ current: lobby, loading: false });
+  joinLobby: (lobbyId, p) => {
+    const lobbies = get().lobbies.map((l) => {
+      if (l.id !== lobbyId) return l;
+      if (l.status !== 'OPEN' && l.status !== 'FULL') return l;
+      if (l.participants.find((x) => x.id === p.id)) return l;
+      const participant: Participant = { ...p, joinedAt: new Date().toISOString() };
+      const participants = [...l.participants, participant];
+      const status: LobbyStatus = participants.length >= l.seats ? 'FULL' : 'OPEN';
+      return { ...l, participants, status };
+    });
+    set({ lobbies });
+    const lobby = lobbies.find((x) => x.id === lobbyId);
+    // If lobby is FULL, optionally start countdown
+    if (lobby && lobby.status === 'FULL') {
+      // start a short countdown (mock)
+      setTimeout(() => get().startLobbyCountdown(lobbyId, 8), 200);
+    }
+    return lobby;
   },
-  async create(params) {
-    const lobby = await apiCreateLobby(params);
-    set((state) => ({ items: [...state.items, lobby] }));
+  leaveLobby: (lobbyId, participantId) => {
+    set((s) => ({
+      lobbies: s.lobbies.map((l) => {
+        if (l.id !== lobbyId) return l;
+        const participants = l.participants.filter((p) => p.id !== participantId);
+        return { ...l, participants, status: participants.length < l.seats ? 'OPEN' : l.status };
+      }),
+    }));
   },
-  async join(id, participant) {
-    const lobby = await apiJoinLobby(id, participant);
-    if (!lobby) return;
-    set((state) => {
-      const items = state.items.map((l) => (l.id === id ? lobby : l));
-      const current = state.current?.id === id ? lobby : state.current;
-      return { items, current };
+  startLobbyCountdown: (lobbyId, seconds) => {
+    // set countdownSec & status RUNNING, tick down every sec
+    set((s) => ({
+      lobbies: s.lobbies.map((l) => (l.id === lobbyId ? { ...l, countdownSec: seconds, status: 'RUNNING' } : l)),
+    }));
+    const timer = setInterval(() => {
+      const lobby = get().lobbies.find((l) => l.id === lobbyId);
+      if (!lobby) {
+        clearInterval(timer);
+        return;
+      }
+      if ((lobby.countdownSec ?? 0) <= 1) {
+        clearInterval(timer);
+        // pick winner
+        get().pickWinner(lobbyId);
+        return;
+      }
+      set((s) => ({
+        lobbies: s.lobbies.map((l) =>
+          l.id === lobbyId ? { ...l, countdownSec: Math.max(0, (l.countdownSec ?? 0) - 1) } : l
+        ),
+      }));
+    }, 1000);
+  },
+  pickWinner: (lobbyId) => {
+    set((s) => {
+      const l = s.lobbies.find((x) => x.id === lobbyId);
+      if (!l) return { lobbies: s.lobbies };
+      if (l.participants.length === 0) {
+        // no participants -> close
+        return {
+          lobbies: s.lobbies.map((x) => (x.id === lobbyId ? { ...x, status: 'FINISHED', winnerId: undefined } : x)),
+        };
+      }
+      const winner = l.participants[Math.floor(Math.random() * l.participants.length)];
+      return {
+        lobbies: s.lobbies.map((x) =>
+          x.id === lobbyId ? { ...x, status: 'FINISHED', winnerId: winner.id, countdownSec: 0 } : x
+        ),
+      };
     });
   },
-  async leave(id, userId) {
-    const lobby = await apiLeaveLobby(id, userId);
-    if (!lobby) return;
-    // If lobby is closed, remove it
-    if (lobby.status === 'CLOSED') {
-      await removeLobby(id);
-      set((state) => ({ items: state.items.filter((l) => l.id !== id), current: state.current?.id === id ? undefined : state.current }));
-    } else {
-      set((state) => {
-        const items = state.items.map((l) => (l.id === id ? lobby : l));
-        const current = state.current?.id === id ? lobby : state.current;
-        return { items, current };
-      });
-    }
+  closeLobby: (lobbyId) => {
+    set((s) => ({ lobbies: s.lobbies.map((l) => (l.id === lobbyId ? { ...l, status: 'CLOSED' } : l)) }));
   },
-  async tick(id) {
-    const lobby = await tickCountdown(id);
-    if (!lobby) return;
-    // If lobby status changed to CLOSED here, remove it
-    if (lobby.status === 'CLOSED') {
-      await removeLobby(id);
-      set((state) => ({ items: state.items.filter((l) => l.id !== id), current: state.current?.id === id ? undefined : state.current }));
-    } else {
-      set((state) => {
-        const items = state.items.map((l) => (l.id === id ? lobby : l));
-        const current = state.current?.id === id ? lobby : state.current;
-        return { items, current };
-      });
-    }
-  },
-  async remove(id) {
-    await removeLobby(id);
-    set((state) => ({ items: state.items.filter((l) => l.id !== id), current: state.current?.id === id ? undefined : state.current }));
-  },
+  reset: () => set({ lobbies: DEFAULT_LOBBIES }),
 }));
