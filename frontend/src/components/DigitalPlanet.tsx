@@ -31,7 +31,7 @@ function BinaryRain() {
           key={i}
           position={[x as number, y as number, z as number]}
           fontSize={0.4}
-          color="#00ffcc"
+          color="#00c3ffff"
           fillOpacity={0.5}
           ref={el => { if (el) meshRefs.current[i] = el }}
         >
@@ -107,7 +107,8 @@ function EventHorizonCore() {
           transparent
           blending={THREE.AdditiveBlending}
           vertexShader={`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
-          fragmentShader={`uniform float time; varying vec2 vUv; float glow = abs(sin(vUv.x * 10.0 + time * 3.0)); vec3 col = mix(vec3(0.0,1.0,1.0), vec3(1.0,0.0,0.4), vUv.x); gl_FragColor = vec4(col * glow, glow * 0.6);`}
+          fragmentShader={`uniform float time; varying vec2 vUv; float glow = abs(sin(vUv.x * 10.0 + time * 3.0)); vec3 col = mix(vec3(0.0,1.0,1.0), vec3(1.0,0.0,0.4), vUv.x); gl_FragColor = vec4(col * gl
+            ow, glow * 0.6);`}
         />
       </mesh>
 
