@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { LanguageProvider } from './LanguageContext';
@@ -31,7 +31,7 @@ export default function App() {
     }
   }, []);
 
-  // Handle invite deep links via Telegram start_param or URL query
+  // Handle invite/deep links via Telegram start_param or URL query
   useEffect(() => {
     try {
       const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param as string | undefined;
@@ -50,6 +50,10 @@ export default function App() {
           .then((j) => { if (j?.lobbyId) navigate(`/lobby/${j.lobbyId}`); });
         return;
       }
+      if (startParam && startParam.startsWith('ref_')) {
+        const refId = startParam.replace('ref_', '');
+        try { localStorage.setItem('referrerId', refId); } catch {}
+      }
     } catch {}
     const params = new URLSearchParams(window.location.search);
     const lobbyId = params.get('lobbyId');
@@ -61,6 +65,10 @@ export default function App() {
       fetch(`${backend.replace(/\/$/, '')}/api/invites/${encodeURIComponent(invite)}`)
         .then((r) => r.json())
         .then((j) => { if (j?.lobbyId) navigate(`/lobby/${j.lobbyId}`); });
+    }
+    const ref = params.get('ref');
+    if (ref) {
+      try { localStorage.setItem('referrerId', ref); } catch {}
     }
   }, [navigate]);
 
@@ -83,3 +91,4 @@ export default function App() {
     </LanguageProvider>
   );
 }
+

@@ -24,8 +24,8 @@ router.post('/create', async (req: Request, res: Response) => {
   } else {
     tokens.set(token, { lobbyId, createdAt: now, expiresAt: expiresAt.getTime() });
   }
-  const bot = process.env.TELEGRAM_BOT_USERNAME;
-  const link = bot ? `https://t.me/${bot}?start=invite_${token}` : undefined;
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME;
+const link = `https://t.me/${botUsername}?start=invite_${token}`;
   res.json({ token, link });
 });
 

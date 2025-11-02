@@ -41,10 +41,8 @@ export default function Earn() {
 
   const referralLink = useMemo(() => {
     if (!userId) return '';
-    const url = new URL(window.location.origin);
-    url.pathname = '/';
-    url.searchParams.set('ref', userId);
-    return url.toString();
+    const bot = (import.meta as any).env.VITE_TELEGRAM_BOT_USERNAME || (import.meta as any).env.VITE_BOT_NAME;
+    return bot ? `https://t.me/${bot}?start=ref_${userId}` : '';
   }, [userId]);
 
   const handleCopy = async () => {
