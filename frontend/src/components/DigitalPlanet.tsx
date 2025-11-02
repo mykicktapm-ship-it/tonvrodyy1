@@ -1,87 +1,144 @@
 import * as THREE from 'three'
+import React, { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useRef, useMemo } from 'react'
+import { Text } from '@react-three/drei'
 
-/**
- * Гравитационная сфера — ядро с эффектом втягивания света.
- * Реализует свечение, искажения и мягкие энергетические кольца.
- */
+function BinaryRain() {
+  const count = 300
+  const group = useRef<THREE.Group>(null)
+  const speeds = useMemo(() => Array.from({ length: count }, () => 1 + Math.random() * 2), [])
+  const positions = useMemo(() => Array.from({ length: count }, () => [
+    (Math.random() - 0.5) * 14,
+    Math.random() * 20,
+    (Math.random() - 0.5) * 6,
+    Math.random() > 0.5 ? '1' : '0'
+  ]), [])
 
-function GravityCore() {
-  const mesh = useRef<THREE.Mesh>(null)
-  const uniforms = useMemo(
-    () => ({
-      time: { value: 0 },
-    }),
-    []
-  )
+  const meshRefs = useRef<THREE.Mesh[]>([])
 
   useFrame((_, delta) => {
-    uniforms.time.value += delta
-    if (mesh.current) mesh.current.rotation.y += delta * 0.15
+    if (!meshRefs.current.length) return
+    meshRefs.current.forEach((mesh, i) => {
+      mesh.position.y -= speeds[i] * delta
+      if (mesh.position.y < -10) mesh.position.y = 10
+    })
   })
 
   return (
-    <mesh ref={mesh}>
-      <sphereGeometry args={[1.2, 128, 128]} />
-      <shaderMaterial
-        uniforms={uniforms}
-        transparent
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        fragmentShader={`
-          uniform float time;
-          varying vec2 vUv;
+    <group ref={group}>
+      {positions.map(([x, y, z, char], i) => (
+        <Text
+          key={i}
+          position={[x as number, y as number, z as number]}
+          fontSize={0.4}
+          color="#00ffcc"
+          fillOpacity={0.5}
+          ref={el => { if (el) meshRefs.current[i] = el }}
+        >
+          {char as string}
+        </Text>
+      ))}
+    </group>
+  )
+}
 
-          // Плавный шум
-          float noise(vec2 p) {
-            return sin(p.x*15.0 + time*0.8) * sin(p.y*12.0 - time*0.6);
-          }
+function TonrodyRing() {
+  const radius = 3.2
+  const chars = 'TONRODY'.split('')
+  return (
+    <group>
+      {chars.map((char, i) => {
+        const angle = (i / chars.length) * Math.PI * 2
+        const x = Math.cos(angle) * radius
+        const y = Math.sin(angle) * radius
+        return (
+          <Text
+            key={i}
+            position={[x, y, 0]}
+            rotation={[0, 0, angle + Math.PI / 2]}
+            fontSize={0.7}
+            color="white"
+            fillOpacity={0.8}
+          >
+            {char}
+          </Text>
+        )
+      })}
+    </group>
+  )
+}
 
-          void main() {
-            vec2 uv = vUv * 2.0 - 1.0;
-            float r = length(uv);
+// ⬇︎ Остальная структура DigitalPlanet остаётся без изменений
+function EventHorizonCore() {
+  const group = useRef<THREE.Group>(null)
+  const ring = useRef<THREE.Mesh>(null)
+  const uniforms = useMemo(() => ({ time: { value: 0 } }), [])
 
-            // Эффект притяжения к центру
-            float glow = smoothstep(0.9, 0.1, r);
-            float swirl = sin(r*10.0 - time*2.0) * 0.5 + 0.5;
-            float n = noise(uv * 2.5 + swirl);
+  useFrame((state, delta) => {
+    uniforms.time.value += delta
+    if (group.current) {
+      group.current.rotation.y += delta * 0.1
+      group.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.25) * 0.2
+    }
+    if (ring.current) {
+      ring.current.rotation.z += delta * 0.6
+    }
+  })
 
-            vec3 inner = mix(vec3(0.1, 0.0, 0.2), vec3(0.9, 0.0, 0.0), 1.0 - r);
-            vec3 plasma = mix(inner, vec3(0.0, 0.6, 1.0), n * glow);
+  return (
+    <group ref={group}>
+      {/* Центральное ядро */}
+      <mesh>
+        <sphereGeometry args={[1.2, 64, 64]} />
+        <shaderMaterial
+          uniforms={uniforms}
+          transparent
+          blending={THREE.AdditiveBlending}
+          vertexShader={`varying vec3 vNormal; void main(){ vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`}
+          fragmentShader={`varying vec3 vNormal; void main(){ float fres = pow(1.0 - abs(dot(vNormal, vec3(0,0,1))), 2.5); vec3 color = mix(vec3(0.0), vec3(0.1,0.1,0.1) + fres * vec3(0.6,0.0,0.0), 1.0); gl_FragColor = vec4(color, 0.8); }`}
+        />
+      </mesh>
 
-            float alpha = smoothstep(1.2, 0.0, r) * 0.9;
+      {/* Тор */}
+      <mesh ref={ring} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[2.0, 0.12, 32, 200]} />
+        <shaderMaterial
+          uniforms={uniforms}
+          transparent
+          blending={THREE.AdditiveBlending}
+          vertexShader={`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
+          fragmentShader={`uniform float time; varying vec2 vUv; float glow = abs(sin(vUv.x * 10.0 + time * 3.0)); vec3 col = mix(vec3(0.0,1.0,1.0), vec3(1.0,0.0,0.4), vUv.x); gl_FragColor = vec4(col * glow, glow * 0.6);`}
+        />
+      </mesh>
 
-            gl_FragColor = vec4(plasma, alpha);
-          }
-        `}
-        vertexShader={`
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `}
-      />
-    </mesh>
+      {/* Гравитационное поле */}
+      <mesh>
+        <sphereGeometry args={[3.5, 64, 64]} />
+        <shaderMaterial
+          uniforms={uniforms}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          vertexShader={`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
+          fragmentShader={`uniform float time; varying vec2 vUv; float d = length(vUv - 0.5); float intensity = smoothstep(0.5, 0.25, d); float pulse = 0.6 + 0.4 * sin(time * 0.8 + d * 5.0); vec3 col = mix(vec3(0.0), vec3(0.2,0.8,1.0), intensity * pulse); gl_FragColor = vec4(col, intensity * 0.2);`}
+        />
+      </mesh>
+    </group>
   )
 }
 
 export default function DigitalPlanet() {
   return (
     <Canvas
-      camera={{ position: [0, 0, 4] }}
-      style={{
-        width: '100%',
-        height: '100%',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-      }}
+      camera={{ position: [0, 0, 7], fov: 55 }}
+      gl={{ powerPreference: 'high-performance', antialias: true }}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}
     >
-      <ambientLight intensity={0.6} />
-      <pointLight position={[0, 0, 2]} intensity={2.5} color="#ff0040" />
-      <GravityCore />
+      <color attach="background" args={['black']} />
+      <ambientLight intensity={0.4} />
+      <BinaryRain />
+      <TonrodyRing />
+      <EventHorizonCore />
     </Canvas>
   )
 }
