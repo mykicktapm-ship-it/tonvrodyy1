@@ -1,5 +1,6 @@
 import React from 'react'
-import { HStack, Text, Box } from '@chakra-ui/react'
+import { HStack, Text, Box, Spacer } from '@chakra-ui/react'
+import LanguageSwitcher from './LanguageSwitcher'
 import { motion } from 'framer-motion'
 
 /**
@@ -26,6 +27,8 @@ export default function AppBar() {
         <Text fontSize="lg" fontWeight="bold" color="cyan.200" letterSpacing="wider">
           TONRODY
         </Text>
+        <Spacer />
+        <LanguageSwitcher />
         <MotionBox
           w="100px"
           h="36px"

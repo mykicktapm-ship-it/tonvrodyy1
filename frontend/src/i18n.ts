@@ -1,5 +1,4 @@
-// Translation dictionaries for the application.
-// Each locale contains nested objects corresponding to various UI sections.
+// Simple i18n dictionaries and helpers
 
 export type Locale = 'en' | 'ru';
 
@@ -27,7 +26,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       easy: 'Easy',
       medium: 'Medium',
       hot: 'Hot',
-      loading: 'Loading…',
+      loading: 'Loading...',
       notConnected: 'Not connected',
       connected: 'Connected',
     },
@@ -52,6 +51,20 @@ export const translations: Record<Locale, Record<string, any>> = {
       referralsSummary: 'Referral summary',
       referralList: 'Referral list',
     },
+    lobby: {
+      title: 'Lobby',
+      participants: 'Participants',
+      seats: 'Seats',
+      stake: 'Stake',
+      pool: 'Pool',
+      created: 'Created',
+      invite: 'Invite',
+      copyLink: 'Copy link',
+      join: 'Join lobby',
+      leave: 'Leave',
+      youJoined: 'You joined',
+      bet: 'Bet',
+    },
   },
   ru: {
     general: {
@@ -61,7 +74,7 @@ export const translations: Record<Locale, Record<string, any>> = {
       connectWallet: 'Подключить кошелёк',
       disconnectWallet: 'Отключить',
       deposit: 'Депозит',
-      withdraw: 'Вывод',
+      withdraw: 'Вывести',
       history: 'История',
       copy: 'Копировать',
       share: 'Поделиться',
@@ -70,15 +83,15 @@ export const translations: Record<Locale, Record<string, any>> = {
       turnover: 'Оборот',
       bonus: 'Бонус',
       createLobby: 'Создать лобби',
-      join: 'Присоединиться',
+      join: 'Войти',
       view: 'Просмотр',
       all: 'Все',
       easy: 'Лёгкий',
       medium: 'Средний',
       hot: 'Сложный',
-      loading: 'Загрузка…',
-      notConnected: 'Не подключен',
-      connected: 'Подключен',
+      loading: 'Загрузка...',
+      notConnected: 'Кошелёк не подключен',
+      connected: 'Подключено',
     },
     home: {
       welcome: 'Добро пожаловать',
@@ -87,19 +100,33 @@ export const translations: Record<Locale, Record<string, any>> = {
       totalRounds: 'Всего раундов',
       winRate: 'Процент побед',
       winnings: 'Выигрыши',
-      last24h: 'Последние 24ч',
+      last24h: 'За 24 часа',
     },
     laboratory: {
       title: 'Лаборатория',
-      metricsRounds: 'Завершённых раундов',
+      metricsRounds: 'Завершено раундов',
       metricsOpen: 'Открытых лобби',
       noLobbies: 'Лобби не найдены',
       searchPlaceholder: 'Поиск по ID или создателю',
     },
     earn: {
-      title: 'Приглашайте и зарабатывайте',
-      referralsSummary: 'Сводка рефералов',
+      title: 'Заработок и приглашения',
+      referralsSummary: 'Сводка по рефералам',
       referralList: 'Список рефералов',
+    },
+    lobby: {
+      title: 'Лобби',
+      participants: 'Участники',
+      seats: 'Мест',
+      stake: 'Ставка',
+      pool: 'Пул',
+      created: 'Создано',
+      invite: 'Пригласить',
+      copyLink: 'Скопировать ссылку',
+      join: 'Войти в лобби',
+      leave: 'Выйти',
+      youJoined: 'Вы в лобби',
+      bet: 'Ставка',
     },
   },
 };

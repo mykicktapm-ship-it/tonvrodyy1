@@ -14,6 +14,7 @@ import GlassContainer from '../components/GlassContainer';
 import { useAppUserId } from '../hooks/useAppUserId';
 import { useTranslation } from '../LanguageContext';
 import CosmicBackground from '../components/CosmicBackground';
+import TonWalletControls from '../components/wallet/TonWalletControls';
 
 // Generate random stats or placeholder; in production these would come from API
 function generateStats() {
@@ -90,15 +91,7 @@ export default function Home() {
         </Box>
         {/* Action buttons */}
         <HStack spacing={4} mb={4} wrap="wrap">
-          <Button colorScheme="blue" size="sm" onClick={() => toast({ title: 'Deposit clicked', duration: 1500, isClosable: true })}>
-            {t('general.deposit')}
-          </Button>
-          <Button colorScheme="blue" size="sm" onClick={() => toast({ title: 'Withdraw clicked', duration: 1500, isClosable: true })}>
-            {t('general.withdraw')}
-          </Button>
-          <Button colorScheme="blue" size="sm" onClick={() => toast({ title: 'History clicked', duration: 1500, isClosable: true })}>
-            {t('general.history')}
-          </Button>
+          <TonWalletControls />
         </HStack>
       </GlassContainer>
       {/* Stats */}

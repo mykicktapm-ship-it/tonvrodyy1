@@ -35,6 +35,7 @@ export async function createLobby(params: {
   stakeTon: number;
   creatorId: string;
   isPrivate?: boolean;
+  password?: string;
 }): Promise<Lobby> {
   const id = generateLobbyId();
   const lobby: Lobby = {
@@ -47,16 +48,23 @@ export async function createLobby(params: {
     creatorId: params.creatorId,
     participants: [],
     poolTon: calcPool(params.seats, params.stakeTon),
+    isPrivate: !!(params.password && params.password.length > 0) || params.isPrivate,
+    password: params.password,
   };
   mockLobbies.push(lobby);
   return lobby;
 }
 
-export async function joinLobby(lobbyId: string, participant: Participant): Promise<Lobby | undefined> {
+export async function joinLobby(lobbyId: string, participant: Participant, password?: string): Promise<Lobby | undefined> {
   const lobby = mockLobbies.find((l) => l.id === lobbyId);
   if (!lobby) return undefined;
   if (lobby.participants.some((p) => p.id === participant.id)) return lobby;
   if (lobby.status !== 'OPEN') return lobby;
+  if (lobby.isPrivate) {
+    if (!password || password !== lobby.password) {
+      throw new Error('INVALID_PASSWORD');
+    }
+  }
 
   if (lobby.participants.length < lobby.seats) {
     lobby.participants.push({ ...participant, joinedAt: nowIso() });

@@ -6,7 +6,7 @@ export interface Participant {
   id: string;
   name: string;
   wallet?: string;
-  joinedAt?: string; // время присоединения к лобби
+  joinedAt?: string;
 }
 
 export interface Lobby {
@@ -19,7 +19,10 @@ export interface Lobby {
   creatorId: string;
   participants: Participant[];
   poolTon: number;
-  countdownSec?: number; // таймер перед стартом
-  winnerId?: string; // победитель лобби
-  isPrivate?: boolean; // приватное лобби
+  countdownSec?: number;
+  winnerId?: string;
+  isPrivate?: boolean;
+  // Demo-only: in-memory password for private lobbies
+  password?: string;
 }
+

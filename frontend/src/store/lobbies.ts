@@ -21,8 +21,8 @@ interface LobbiesState {
   loading: boolean;
   fetchAll: () => Promise<void>;
   fetchOne: (id: string) => Promise<void>;
-  create: (params: { tier: Tier; seats: number; stakeTon: number; creatorId: string; isPrivate?: boolean }) => Promise<void>;
-  join: (id: string, participant: Participant) => Promise<void>;
+  create: (params: { tier: Tier; seats: number; stakeTon: number; creatorId: string; isPrivate?: boolean; password?: string }) => Promise<void>;
+  join: (id: string, participant: Participant, password?: string) => Promise<void>;
   leave: (id: string, userId: string) => Promise<void>;
   tick: (id: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
@@ -50,8 +50,8 @@ export const useLobbies = create<LobbiesState>((set, get) => ({
     set((state) => ({ items: [...state.items, lobby] }));
   },
 
-  async join(id, participant) {
-    const lobby = await apiJoinLobby(id, participant);
+  async join(id, participant, password) {
+    const lobby = await apiJoinLobby(id, participant, password);
     if (!lobby) return;
     set((state) => {
       const items = state.items.map((l) => (l.id === id ? lobby : l));

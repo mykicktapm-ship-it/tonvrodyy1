@@ -18,10 +18,16 @@ interface LanguageContextProps {
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize locale from localStorage or default to English
+  // Initialize locale from localStorage or Telegram language_code
   const [locale, setLocaleState] = useState<Locale>(() => {
-    const stored = localStorage.getItem('locale') as Locale | null;
-    return stored ?? 'en';
+    try {
+      const stored = localStorage.getItem('locale') as Locale | null;
+      if (stored) return stored;
+      const tgLang: string | undefined = (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+      if (tgLang?.startsWith('ru')) return 'ru';
+      if (tgLang?.startsWith('en')) return 'en';
+    } catch {}
+    return 'en';
   });
 
   const setLocale = useCallback((newLocale: Locale) => {

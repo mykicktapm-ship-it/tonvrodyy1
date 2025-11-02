@@ -1,6 +1,6 @@
 import React from 'react'
 import { Flex, IconButton } from '@chakra-ui/react'
-import { FiHome, FiActivity, FiTrendingUp } from 'react-icons/fi'
+import { FiHome, FiActivity, FiTrendingUp, FiClock } from 'react-icons/fi'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 /**
@@ -16,6 +16,7 @@ export default function NavBar() {
     { icon: FiHome, path: '/', label: 'Home' },
     { icon: FiActivity, path: '/laboratory', label: 'Lab' },
     { icon: FiTrendingUp, path: '/earn', label: 'Earn' },
+    { icon: FiClock, path: '/history', label: 'History' },
   ]
 
   return (

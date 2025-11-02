@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import referralRouter from "./referral";
+import invitesRouter from "./invites";
 
 const app = express();
 app.use(cors());
@@ -17,6 +18,7 @@ app.get("/api/status", (req: Request, res: Response) => {
 
 // Referral logic routes
 app.use("/api/referrals", referralRouter);
+app.use("/api/invites", invitesRouter);
 
 // Fallback route
 app.use("*", (req: Request, res: Response) => {
