@@ -53,6 +53,12 @@ export const useLobbies = create<LobbiesState>((set, get) => ({
   async join(id, participant, password) {
     const lobby = await apiJoinLobby(id, participant, password);
     if (!lobby) return;
+    try {
+      const backend = (import.meta as any).env.VITE_BACKEND_URL || '';
+      await fetch(`${String(backend).replace(/\/$/, '')}/api/activity`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appId: participant.id, action: 'join_lobby', extra_data: { lobbyId: id } })
+      });
+    } catch {}
     set((state) => {
       const items = state.items.map((l) => (l.id === id ? lobby : l));
       const current = state.current?.id === id ? lobby : state.current;
@@ -63,6 +69,12 @@ export const useLobbies = create<LobbiesState>((set, get) => ({
   async leave(id, userId) {
     const lobby = await apiLeaveLobby(id, userId);
     if (!lobby) return;
+    try {
+      const backend = (import.meta as any).env.VITE_BACKEND_URL || '';
+      await fetch(`${String(backend).replace(/\/$/, '')}/api/activity`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appId: userId, action: 'leave_lobby', extra_data: { lobbyId: id } })
+      });
+    } catch {}
 
     if (lobby.status === 'CLOSED') {
       await removeLobby(id);

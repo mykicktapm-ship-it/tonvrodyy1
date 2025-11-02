@@ -47,7 +47,16 @@ export default function App() {
         const backend = (import.meta as any).env.VITE_BACKEND_URL || '';
         fetch(`${backend.replace(/\/$/, '')}/api/invites/${encodeURIComponent(token)}`)
           .then((r) => r.json())
-          .then((j) => { if (j?.lobbyId) navigate(`/lobby/${j.lobbyId}`); });
+          .then((j) => {
+            if (j?.lobbyId) {
+              if (typeof j.lobbyId === 'string' && j.lobbyId.startsWith('REF-')) {
+                const refId = j.lobbyId.slice(4);
+                try { localStorage.setItem('referrerId', refId); } catch {}
+              } else {
+                navigate(`/lobby/${j.lobbyId}`);
+              }
+            }
+          });
         return;
       }
       if (startParam && startParam.startsWith('ref_')) {
@@ -64,7 +73,16 @@ export default function App() {
       const backend = (import.meta as any).env.VITE_BACKEND_URL || '';
       fetch(`${backend.replace(/\/$/, '')}/api/invites/${encodeURIComponent(invite)}`)
         .then((r) => r.json())
-        .then((j) => { if (j?.lobbyId) navigate(`/lobby/${j.lobbyId}`); });
+        .then((j) => {
+          if (j?.lobbyId) {
+            if (typeof j.lobbyId === 'string' && j.lobbyId.startsWith('REF-')) {
+              const refId = j.lobbyId.slice(4);
+              try { localStorage.setItem('referrerId', refId); } catch {}
+            } else {
+              navigate(`/lobby/${j.lobbyId}`);
+            }
+          }
+        });
     }
     const ref = params.get('ref');
     if (ref) {

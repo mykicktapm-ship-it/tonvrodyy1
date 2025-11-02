@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -20,13 +20,14 @@ import {
 import GlassContainer from '../components/GlassContainer';
 import { useAppUserId } from '../hooks/useAppUserId';
 import { useTranslation } from '../LanguageContext';
-import { FaCopy, FaShareAlt } from 'react-icons/fa';
+import { FaCopy, FaShareAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import CosmicBackground from '../components/CosmicBackground';
 
 export default function Earn() {
   const { t } = useTranslation();
   const userId = useAppUserId();
   const toast = useToast();
+  const [inviteLink, setInviteLink] = useState('');
 
   // Telegram user info
   const telegramUser = useMemo(() => {
@@ -39,15 +40,32 @@ export default function Earn() {
   const displayName = telegramUser?.first_name ? `${telegramUser.first_name} ${telegramUser.last_name ?? ''}` : 'Guest';
   const avatarUrl = telegramUser?.photo_url;
 
-  const referralLink = useMemo(() => {
-    if (!userId) return '';
+  useEffect(() => {
+    if (!userId) return;
+    const backend = (import.meta as any).env.VITE_BACKEND_URL || '';
     const bot = (import.meta as any).env.VITE_TELEGRAM_BOT_USERNAME || (import.meta as any).env.VITE_BOT_NAME;
-    return bot ? `https://t.me/${bot}?start=ref_${userId}` : '';
+    (async () => {
+      try {
+        // Создаём реферальный токен через API (пометка REF-<userId>)
+        const r = await fetch(`${backend.replace(/\/$/, '')}/api/invites/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lobbyId: `REF-${userId}` })
+        });
+        if (!r.ok) throw new Error(`Invite create failed: ${r.status}`);
+        const { token, link: apiLink } = await r.json();
+        const link = apiLink || (bot ? `https://t.me/${bot}?start=invite_${token}` : '');
+        setInviteLink(link);
+      } catch (e) {
+        console.error('Invite link error', e);
+        setInviteLink('');
+      }
+    })();
   }, [userId]);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(referralLink);
+      await navigator.clipboard.writeText(inviteLink);
       toast({ title: t('general.copy') + ' OK', status: 'success', duration: 2000, isClosable: true });
     } catch (err) {
       toast({ title: t('general.copy') + ' failed', description: String(err), status: 'error', duration: 2000, isClosable: true });
@@ -56,13 +74,23 @@ export default function Earn() {
   const handleShare = async () => {
     if ((navigator as any).share) {
       try {
-        await (navigator as any).share({ title: 'Referral link', url: referralLink });
+        await (navigator as any).share({ title: 'Referral link', url: inviteLink });
       } catch (e) {
         toast({ title: 'Share canceled', status: 'info', duration: 1500, isClosable: true });
       }
     } else {
       handleCopy();
     }
+  };
+  const handleOpenTelegram = () => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && typeof tg.openTelegramLink === 'function') {
+        tg.openTelegramLink(inviteLink);
+        return;
+      }
+    } catch {}
+    if (inviteLink) window.open(inviteLink, '_blank');
   };
 
   // Sample referral summary
@@ -106,7 +134,9 @@ export default function Earn() {
           <>
             <Text fontSize="sm" mb={2}>{t('general.referralLink')}:</Text>
             <Box bg="rgba(255,255,255,0.05)" border="1px solid rgba(255,255,255,0.18)" borderRadius="md" p={2} mb={2}>
-              <Text fontSize="xs" wordBreak="break-all">{referralLink}</Text>
+              <Text fontSize="xs" wordBreak="break-all">
+                <a href={inviteLink} target="_blank" rel="noreferrer">{inviteLink}</a>
+              </Text>
             </Box>
             <HStack spacing={2} mb={4}>
               <Button leftIcon={<FaCopy />} size="sm" colorScheme="blue" onClick={handleCopy}>
@@ -114,6 +144,9 @@ export default function Earn() {
               </Button>
               <Button leftIcon={<FaShareAlt />} size="sm" variant="outline" onClick={handleShare}>
                 {t('general.share')}
+              </Button>
+              <Button leftIcon={<FaExternalLinkAlt />} size="sm" variant="ghost" onClick={handleOpenTelegram}>
+                Open Telegram
               </Button>
             </HStack>
           </>

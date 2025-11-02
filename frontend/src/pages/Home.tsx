@@ -9,37 +9,58 @@ import {
   HStack,
   useToast,
 } from '@chakra-ui/react';
-import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
+import { TonConnectButton, useTonWallet, useTonConnectUI } from '@tonconnect/ui-react';
 import GlassContainer from '../components/GlassContainer';
 import { useAppUserId } from '../hooks/useAppUserId';
 import { useTranslation } from '../LanguageContext';
 import CosmicBackground from '../components/CosmicBackground';
 import TonWalletControls from '../components/wallet/TonWalletControls';
 
-// Generate random stats or placeholder; in production these would come from API
-function generateStats() {
-  return {
-    totalRounds: Math.floor(Math.random() * 1000),
-    winRate: (Math.random() * 100).toFixed(1) + '%',
-    winnings: (Math.random() * 50).toFixed(2),
-    last24h: (Math.random() * 10).toFixed(2),
-  };
-}
+type Stats = { totalRounds: number; winRate: number; winnings: number; last24h: number };
 
 export default function Home() {
   const { t } = useTranslation();
   const userId = useAppUserId();
   const wallet = useTonWallet();
+  const [tonConnectUI] = useTonConnectUI();
   const toast = useToast();
 
-  // Fake stats with update interval
-  const [stats, setStats] = useState(generateStats());
+  // Real stats from backend
+  const [stats, setStats] = useState<Stats | null>(null);
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStats(generateStats());
-    }, 12000); // update every 12 seconds
-    return () => clearInterval(interval);
-  }, []);
+    const backend = (import.meta as any).env.VITE_BACKEND_URL || '';
+    if (!userId) return;
+    (async () => {
+      try {
+        const r = await fetch(`${String(backend).replace(/\/$/, '')}/api/users/${userId}/stats`);
+        if (!r.ok) throw new Error(`stats ${r.status}`);
+        const data = await r.json();
+        setStats(data);
+      } catch (e) {
+        console.error('Stats fetch failed', e);
+        setStats({ totalRounds: 0, winRate: 0, winnings: 0, last24h: 0 });
+      }
+    })();
+  }, [userId]);
+
+  // Upsert user and wallet lifecycle
+  useEffect(() => {
+    const backend = (import.meta as any).env.VITE_BACKEND_URL || '';
+    if (!userId) return;
+    const appId = userId;
+    const addr = wallet?.account?.address;
+    (async () => {
+      try {
+        const body: any = { appId, action: addr ? 'connect' : 'disconnect' };
+        if (addr) body.walletAddress = addr;
+        await fetch(`${String(backend).replace(/\/$/, '')}/api/users/upsert`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, [userId, wallet?.account?.address]);
 
   // Telegram user info
   const telegramUser = useMemo(() => {
@@ -77,14 +98,19 @@ export default function Home() {
           </Box>
         </HStack>
         <Text fontSize="sm" mb={2}>
-          {t('general.home')} {t('general.notConnected')}
+          {t('general.home')} {wallet?.account?.address ? '' : t('general.notConnected')}
         </Text>
         {/* Wallet status */}
         <Box mb={4}>
           {wallet?.account?.address ? (
-            <Text fontSize="sm" color="ton.glow">
-              {wallet.account.address.slice(0, 6)}…{wallet.account.address.slice(-4)}
-            </Text>
+            <HStack>
+              <Text fontSize="sm" color="ton.glow">
+                {wallet.account.address.slice(0, 6)}...{wallet.account.address.slice(-4)}
+              </Text>
+              <Button size="xs" variant="outline" onClick={() => tonConnectUI.disconnect()}>
+                {t('general.disconnect') || 'Отключить'}
+              </Button>
+            </HStack>
           ) : (
             <TonConnectButton />
           )}
@@ -104,28 +130,29 @@ export default function Home() {
             <Text fontSize="xs" color="ton.secondaryText" mb={1}>
               {t('home.totalRounds')}
             </Text>
-            <Heading size="lg">{stats.totalRounds}</Heading>
+            <Heading size="lg">{stats?.totalRounds ?? 0}</Heading>
           </Box>
           <Box>
             <Text fontSize="xs" color="ton.secondaryText" mb={1}>
               {t('home.winRate')}
             </Text>
-            <Heading size="lg">{stats.winRate}</Heading>
+            <Heading size="lg">{(stats?.winRate ?? 0).toFixed(1)}%</Heading>
           </Box>
           <Box>
             <Text fontSize="xs" color="ton.secondaryText" mb={1}>
               {t('home.winnings')} (TON)
             </Text>
-            <Heading size="lg">{stats.winnings}</Heading>
+            <Heading size="lg">{(stats?.winnings ?? 0).toFixed(2)}</Heading>
           </Box>
           <Box>
             <Text fontSize="xs" color="ton.secondaryText" mb={1}>
               {t('home.last24h')}
             </Text>
-            <Heading size="lg">{stats.last24h}</Heading>
+            <Heading size="lg">{(stats?.last24h ?? 0).toFixed(2)}</Heading>
           </Box>
         </SimpleGrid>
       </GlassContainer>
     </VStack>
   );
 }
+
