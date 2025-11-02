@@ -1,67 +1,79 @@
-import { Flex, IconButton, useColorModeValue, Text, useBreakpointValue, Box } from '@chakra-ui/react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { FaHome, FaFlask, FaCoins } from 'react-icons/fa';
-import { useTranslation } from '../LanguageContext';
+import React from 'react'
+import { HStack, IconButton, Box } from '@chakra-ui/react'
+import { FiHome, FiTrendingUp, FiActivity } from 'react-icons/fi'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 /**
- * Bottom navigation bar with three main routes. Uses react-router-dom NavLink
- * to determine the active route and Chakra's IconButton for consistent styling.
+ * NavBar — нижняя панель с энергетическим свечением.
+ * Каждая кнопка имеет эмиссивное сияние и мягкую подсветку активного состояния.
  */
+
 export default function NavBar() {
-  const location = useLocation();
-  const { t } = useTranslation();
-  const showLabels = useBreakpointValue({ base: false, md: true });
-  const bg = useColorModeValue('rgba(255,255,255,0.1)', 'rgba(0,0,0,0.4)');
+  const navigate = useNavigate()
+  const location = useLocation()
+
   const items = [
-    { to: '/', icon: <FaHome />, label: t('general.home') },
-    { to: '/laboratory', icon: <FaFlask />, label: t('general.laboratory') },
-    { to: '/earn', icon: <FaCoins />, label: t('general.earn') },
-  ];
+    { icon: FiHome, route: '/', label: 'Home' },
+    { icon: FiActivity, route: '/laboratory', label: 'Lab' },
+    { icon: FiTrendingUp, route: '/earn', label: 'Earn' },
+  ]
+
   return (
-    <Flex
+    <Box
       position="fixed"
-      bottom={0}
-      left={0}
-      width="100%"
-      justify="space-around"
-      py={2}
-      backdropFilter="blur(12px)"
-      bg={bg}
-      borderTop="1px solid rgba(255,255,255,0.12)"
-      zIndex={20}
+      bottom="0"
+      left="0"
+      w="100%"
+      bg="rgba(10, 10, 20, 0.7)"
+      backdropFilter="blur(20px) saturate(180%)"
+      borderTop="1px solid rgba(255,255,255,0.1)"
+      boxShadow="0 -10px 25px rgba(0,0,0,0.4)"
+      zIndex="40"
     >
-      {items.map((item) => {
-        const isActive = location.pathname === item.to;
-        return (
-          <NavLink key={item.to} to={item.to} end>
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              px={3}
-              py={1}
-              borderRadius="md"
-              bg={isActive ? 'ton.surface' : 'transparent'}
-              boxShadow={isActive ? '0 0 10px var(--chakra-colors-ton-glow)' : undefined}
-              transition="all 0.2s ease"
-            >
+      <HStack justify="space-around" py={3}>
+        {items.map((item, i) => {
+          const active = location.pathname === item.route
+          return (
+            <Box key={i} position="relative">
+              {active && (
+                <Box
+                  position="absolute"
+                  top="-30px"
+                  left="50%"
+                  transform="translateX(-50%)"
+                  w="60px"
+                  h="60px"
+                  borderRadius="full"
+                  bgGradient="radial(rgba(255,0,150,0.35), transparent 70%)"
+                  filter="blur(25px)"
+                  zIndex="0"
+                  animation="pulse 3s ease-in-out infinite"
+                />
+              )}
               <IconButton
                 aria-label={item.label}
-                icon={item.icon}
-                size="sm"
-                colorScheme={isActive ? 'blue' : 'gray'}
-                variant={isActive ? 'solid' : 'ghost'}
-                mb={showLabels ? 1 : 0}
+                icon={<item.icon size="22" />}
+                color={active ? 'cyan.200' : 'gray.400'}
+                variant="ghost"
+                onClick={() => navigate(item.route)}
+                _hover={{ color: 'cyan.100', transform: 'scale(1.1)' }}
+                transition="all 0.3s ease"
+                zIndex="10"
               />
-              {showLabels && (
-                <Text fontSize="xs" color={isActive ? 'ton.primary' : 'ton.secondaryText'}>
-                  {item.label}
-                </Text>
-              )}
-            </Flex>
-          </NavLink>
-        );
-      })}
-    </Flex>
-  );
+            </Box>
+          )
+        })}
+      </HStack>
+
+      <style>
+        {`
+          @keyframes pulse {
+            0% { opacity: 0.3; transform: translateX(-50%) scale(0.9); }
+            50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+            100% { opacity: 0.3; transform: translateX(-50%) scale(0.9); }
+          }
+        `}
+      </style>
+    </Box>
+  )
 }

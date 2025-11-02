@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "es2019",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -14,7 +13,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+    "types": ["vite/client", "react", "react-dom", "three"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

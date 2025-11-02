@@ -1,107 +1,52 @@
-import React from 'react';
-import {
-  Avatar,
-  Box,
-  Flex,
-  IconButton,
-  Text,
-  useBreakpointValue,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Button,
-  HStack,
-  Switch,
-} from '@chakra-ui/react';
-import { useTranslation } from '../LanguageContext';
-import { useAppUserId } from '../hooks/useAppUserId';
-import { useTonWallet } from '@tonconnect/ui-react';
-import { FaLanguage } from 'react-icons/fa';
-import { useEnhancedFx } from '../context/EnhancedFxContext';
+import React from 'react'
+import { HStack, Text, Box } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
 
 /**
- * Top application bar. Displays logo, language switcher, wallet status and avatar.
+ * AppBar — верхняя панель с радиальным световым ореолом и эффектом стекла.
+ * Подсветка активируется при взаимодействии, создавая эффект мягкой эмиссии.
  */
+
+const MotionBox = motion(Box)
+
 export default function AppBar() {
-  const { locale, setLocale, t } = useTranslation();
-  const userId = useAppUserId();
-  const wallet = useTonWallet();
-
-  // Enhanced FX toggle
-  const { isEnhanced, toggleEnhanced } = useEnhancedFx();
-
-  // Determine user avatar from Telegram init data
-  const avatarUrl = React.useMemo(() => {
-    try {
-      const tg = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
-      return tg?.photo_url ?? undefined;
-    } catch (e) {
-      return undefined;
-    }
-  }, []);
-
-  // Breakpoint to show/hide text
-  const showText = useBreakpointValue({ base: false, md: true });
-
   return (
-    <Flex
-      as="header"
+    <Box
       position="fixed"
-      top={0}
-      left={0}
-      right={0}
-      py={2}
-      px={4}
-      align="center"
-      backdropFilter="blur(12px)"
-      bg="rgba(0,0,0,0.4)"
+      top="0"
+      left="0"
+      w="100%"
+      zIndex="50"
+      bg="rgba(10, 10, 25, 0.6)"
+      backdropFilter="blur(20px) saturate(180%)"
       borderBottom="1px solid rgba(255,255,255,0.12)"
-      zIndex={20}
+      boxShadow="0 8px 30px rgba(0,0,0,0.4)"
     >
-      {/* Logo */}
-      <Flex align="center">
-        <Box w={6} h={6} bg="ton.primary" borderRadius="md" mr={2}></Box>
-        {showText && (
-          <Text fontWeight="bold" fontSize="lg">
-            TONRODY
-          </Text>
-        )}
-      </Flex>
-      <Box flex="1" />
-      {/* Language selector */}
-      <Menu>
-        <MenuButton as={IconButton} aria-label="Language" icon={<FaLanguage />} variant="ghost" />
-        <MenuList bg="ton.surface" backdropFilter="blur(12px)" borderColor="rgba(255,255,255,0.18)">
-          <MenuItem onClick={() => setLocale('en')} bg={locale === 'en' ? 'ton.primary' : 'transparent'}>
-            English
-          </MenuItem>
-          <MenuItem onClick={() => setLocale('ru')} bg={locale === 'ru' ? 'ton.primary' : 'transparent'}>
-            Русский
-          </MenuItem>
-        </MenuList>
-      </Menu>
-      {/* Wallet status */}
-      <Box ml={4} mr={4} textAlign="right">
-        {wallet?.account?.address ? (
-          <Text fontSize="sm" color="ton.glow">
-            {wallet.account.address.slice(0, 6)}…{wallet.account.address.slice(-4)}
-          </Text>
-        ) : (
-          <Text fontSize="sm" color="ton.secondaryText">
-            {t('general.notConnected')}
-          </Text>
-        )}
-      </Box>
-      {/* Avatar */}
-      <Avatar size="sm" src={avatarUrl} name={userId ?? undefined} />
-      {/* Enhanced FX toggle (optional heavy effects) */}
-      <HStack ml={4} spacing={2} align="center">
-        <Text fontSize="sm" color="ton.secondaryText" display={{ base: 'none', md: 'inline' }}>
-          ✨ FX
+      <HStack justify="space-between" px={6} py={3}>
+        <Text fontSize="lg" fontWeight="bold" color="cyan.200" letterSpacing="wider">
+          TONRODY
         </Text>
-        <Switch size="sm" colorScheme="blue" isChecked={isEnhanced} onChange={toggleEnhanced} />
+        <MotionBox
+          w="100px"
+          h="36px"
+          borderRadius="full"
+          bgGradient="radial(rgba(255,0,150,0.25), transparent 70%)"
+          filter="blur(20px)"
+          animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        />
       </HStack>
-    </Flex>
-  );
+
+      {/* подсветка вдоль низа панели */}
+      <Box
+        position="absolute"
+        bottom="0"
+        left="0"
+        w="100%"
+        h="2px"
+        bgGradient="linear(to-r, rgba(0,255,255,0.2), rgba(255,0,150,0.4), rgba(0,255,255,0.2))"
+        filter="blur(2px)"
+      />
+    </Box>
+  )
 }
