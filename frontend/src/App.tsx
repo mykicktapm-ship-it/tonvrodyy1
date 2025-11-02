@@ -13,7 +13,7 @@ import AppBar from './components/AppBar';
 
 // Determine manifest URL for TON Connect. In production it should be hosted publicly.
 const manifestUrl = import.meta.env.VITE_TONCONNECT_MANIFEST || '/tonconnect-manifest.json';
-const twaReturnUrl = import.meta.env.VITE_TWA_RETURN_URL || (import.meta.env.VITE_BOT_NAME ? `https://t.me/${import.meta.env.VITE_BOT_NAME}` : undefined);
+const twaReturnUrl = import.meta.env.VITE_TWA_RETURN_URL || (((import.meta as any).env.VITE_TELEGRAM_BOT_USERNAME) ? `https://t.me/${(import.meta as any).env.VITE_TELEGRAM_BOT_USERNAME}` : undefined);
 
 declare global {
   interface Window {

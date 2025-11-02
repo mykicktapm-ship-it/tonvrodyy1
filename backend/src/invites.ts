@@ -24,7 +24,9 @@ router.post('/create', async (req: Request, res: Response) => {
   } else {
     tokens.set(token, { lobbyId, createdAt: now, expiresAt: expiresAt.getTime() });
   }
-  res.json({ token });
+  const bot = process.env.TELEGRAM_BOT_USERNAME;
+  const link = bot ? `https://t.me/${bot}?start=invite_${token}` : undefined;
+  res.json({ token, link });
 });
 
 router.get('/:token', async (req: Request, res: Response) => {
@@ -62,4 +64,6 @@ router.delete('/expired', async (_req: Request, res: Response) => {
   }
   return res.json({ ok: true });
 });
+
+
 

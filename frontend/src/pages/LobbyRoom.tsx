@@ -80,7 +80,7 @@ export default function LobbyRoom() {
     navigate('/laboratory');
   };
 
-  const bot = import.meta.env.VITE_BOT_NAME || 'YourBot';
+  const bot = (import.meta as any).env.VITE_TELEGRAM_BOT_USERNAME || (import.meta as any).env.VITE_BOT_NAME || 'YourBot';
   const backend = import.meta.env.VITE_BACKEND_URL || '';
   const copyInvite = async () => {
     try {
@@ -91,9 +91,10 @@ export default function LobbyRoom() {
         body: JSON.stringify({ lobbyId: id }),
       });
       if (!r.ok) throw new Error(`Invite create failed: ${r.status}`);
-      const { token } = await r.json();
-      const link = `https://t.me/${bot}?start=invite_${token}`;
-      await navigator.clipboard.writeText(link);
+      const { token, link: apiLink } = await r.json();
+      const linkToCopy = apiLink || (bot ? `https://t.me/${bot}?start=invite_${token}` : undefined);
+      if (!linkToCopy) throw new Error('Bot username is not configured');
+      await navigator.clipboard.writeText(linkToCopy);
       toast({ title: t('lobby.copyLink'), status: 'success' });
     } catch (e: any) {
       toast({ title: 'Invite failed', description: String(e?.message || e), status: 'error' });
