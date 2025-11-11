@@ -17,7 +17,7 @@ export default function LobbySlots({ seats, participants, status, isMember, onPi
             p={3}
             borderRadius="md"
             border="1px solid rgba(255,255,255,0.2)"
-            bg={mine ? 'rgba(0,152,234,0.25)' : occupant ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.2)'}
+            bg={mine ? 'rgba(0, 152, 234, 0.25)' : occupant ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.2)'}
             cursor={canJoin ? 'pointer' : 'default'}
             _hover={canJoin ? { transform: 'scale(1.02)' } : undefined}
             transition="all 0.15s ease"

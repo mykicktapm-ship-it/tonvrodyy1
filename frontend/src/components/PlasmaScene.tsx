@@ -75,7 +75,7 @@ function PlasmaField() {
   return (
     <group ref={group}>
       <mesh>
-        <planeGeometry args={[40, 40, 128, 128]} />
+        <planeGeometry args={[140, 40, 128, 128]} />
         <shaderMaterial
           uniforms={uniforms}
           fragmentShader={fragmentShader}

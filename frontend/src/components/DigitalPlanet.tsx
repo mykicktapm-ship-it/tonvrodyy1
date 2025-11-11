@@ -4,7 +4,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 
 function BinaryRain() {
-  const count = 300
+  const count = 750
   const group = useRef<THREE.Group>(null)
   const speeds = useMemo(() => Array.from({ length: count }, () => 1 + Math.random() * 2), [])
   const positions = useMemo(() => Array.from({ length: count }, () => [
@@ -31,7 +31,7 @@ function BinaryRain() {
           key={i}
           position={[x as number, y as number, z as number]}
           fontSize={0.4}
-          color="#00c3ffff"
+          color="#00ff1aff"
           fillOpacity={0.5}
           ref={el => { if (el) meshRefs.current[i] = el }}
         >
@@ -89,7 +89,7 @@ function EventHorizonCore() {
     <group ref={group}>
       {/* Центральное ядро */}
       <mesh>
-        <sphereGeometry args={[1.2, 64, 64]} />
+        <sphereGeometry args={[21.2, 64, 64]} />
         <shaderMaterial
           uniforms={uniforms}
           transparent
@@ -101,7 +101,7 @@ function EventHorizonCore() {
 
       {/* Тор */}
       <mesh ref={ring} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[2.0, 0.12, 32, 200]} />
+        <torusGeometry args={[8.0, 3.12, 32, 200]} />
         <shaderMaterial
           uniforms={uniforms}
           transparent
@@ -114,7 +114,7 @@ function EventHorizonCore() {
 
       {/* Гравитационное поле */}
       <mesh>
-        <sphereGeometry args={[3.5, 64, 64]} />
+        <sphereGeometry args={[10.5, 64, 64]} />
         <shaderMaterial
           uniforms={uniforms}
           transparent
